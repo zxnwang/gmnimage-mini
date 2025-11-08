@@ -1,20 +1,57 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+![Gemini Creative Suite Banner](https://github.com/zxnwang/zxnwang/blob/main/gmnbanner.png?raw=true)
 
-# Run and deploy your AI Studio app
+# Gemini 创意套件
 
-This contains everything you need to run your app locally.
+这是一个功能强大的 Web 应用程序，利用 Google Gemini AI 的先进功能来生成和编辑图像与视频。它提供了一个直观、流畅且响应迅速的界面，让用户能够轻松将他们的创意变为现实。
 
-View your app in AI Studio: https://ai.studio/apps/drive/1BY7cIbNXmSdpN7Lw1gCYiQxhwtlrCSa4
+## ✨ 主要功能
 
-## Run Locally
+### **核心功能**
+- **🎨 双模式操作**: 在“图像工作室”和“视频生成器”之间无缝切换，满足不同的创作需求。
+- **🌍 多语言支持**: 支持英语 (en)、印度尼西亚语 (id) 和中文 (zh)，方便不同地区的用户使用。
+- **📱 响应式设计**: 无论是在桌面还是移动设备上，都能提供卓越的用户体验。
+- **🚀 流畅的动画效果**: 采用现代化的界面设计，带有平滑的过渡动画和交互反馈，操作体验更佳。
 
-**Prerequisites:**  Node.js
+### **🖼️ 图像工作室 (Image Studio)**
+- **📝 文本生成图像**: 根据详细的文本描述，利用 `gemini-2.5-flash-image` 模型创建高质量的图像。
+- **✏️ 图像编辑**: 上传您自己的图像，并使用文本提示对其进行修改和编辑。
+- **🖼️ 参考图像支持**: 最多可添加三张参考图像，以引导 AI 的创作风格、构图和内容。
+- **🖐️ 拖放与排序**: 通过简单的拖放操作即可轻松上传和重新排列参考图像的顺序。
+- **✨ 智能提示增强**: 一键调用 `gemini-2.5-flash` 模型优化您的文本提示，使其更具描述性和艺术性，从而获得更好的生成效果。
+- **💾 下载功能**: 轻松将生成的图像下载到您的本地设备。
 
+### **🎬 视频生成器 (Video Generator)**
+- **📝 文本生成视频**: 使用 Google 先进的 `veo-3.1-fast-generate-preview` 模型，将您的想法转化为高清视频。
+- **🏞️ 起始图像支持**: 可以提供一张起始图像来引导视频的开场画面。
+- **🔄 实时生成状态**: 视频生成过程可能需要几分钟，应用会提供清晰、友好的进度更新信息，让您随时了解状态。
+- **🔑 API 密钥集成**: 与 AI Studio 环境安全集成，提示用户选择用于计费的 API 密钥，确保流程顺畅。
+- **💾 下载视频**: 完成生成后，您可以直接下载 MP4 格式的视频文件。
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## 🛠️ 技术栈
+
+- **前端**: React, TypeScript
+- **样式**: Tailwind CSS
+- **AI 模型**:
+  - Google Gemini API
+  - `gemini-2.5-flash` (用于文本增强)
+  - `gemini-2.5-flash-image` (用于图像生成/编辑)
+  - `veo-3.1-fast-generate-preview` (用于视频生成)
+
+## 🚀 如何使用
+
+### **图像创作**
+1.  在应用顶部选择 **“图像工作室”** 模式。
+2.  **(可选)** 在第一个卡片中上传一张基础图像，以便进行编辑。
+3.  **(可选)** 在第二个卡片中添加最多三张参考图像，以影响生成结果。
+4.  在第三个卡片的文本框中输入您的创意描述。您可以使用 **“增强”** 按钮来自动优化提示。
+5.  点击 **“生成图像”** 或 **“生成编辑后的图像”** 按钮。
+6.  在右侧的预览区域查看生成结果，并可点击下载按钮保存。
+
+### **视频创作**
+1.  切换到 **“视频生成器”** 模式。
+2.  如果系统提示，请按照指引选择您的 Google Cloud API 密钥。
+3.  **(可选)** 上传一张起始图像，作为视频的开端。
+4.  在文本框中输入详细的视频场景描述。
+5.  点击 **“生成视频”** 按钮。
+6.  耐心等待生成过程完成，期间界面会显示当前进度。
+7.  完成后，您可以在右侧预览并下载生成的视频。

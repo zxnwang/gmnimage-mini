@@ -50,7 +50,8 @@ export const enhancePrompt = async (prompt: string): Promise<string> => {
 export const generateOrEditImage = async (
   prompt: string,
   baseImage: { base64Data: string; mimeType: string } | null,
-  referenceImages: { base64Data: string; mimeType: string }[] = []
+  referenceImages: { base64Data: string; mimeType: string }[] = [],
+  maskImage: { base64Data: string; mimeType: string } | null
 ): Promise<string> => {
   try {
     const parts: Part[] = [];
@@ -62,6 +63,17 @@ export const generateOrEditImage = async (
           mimeType: baseImage.mimeType,
         },
       });
+    }
+    
+    // A mask only makes sense with a base image.
+    // The model expects the mask to be provided right after the original image.
+    if (maskImage && baseImage) {
+        parts.push({
+            inlineData: {
+                data: maskImage.base64Data,
+                mimeType: maskImage.mimeType
+            }
+        });
     }
 
     referenceImages.forEach(ref => {

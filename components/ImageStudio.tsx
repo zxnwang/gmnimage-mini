@@ -2,9 +2,10 @@ import React, { useState, useCallback, ChangeEvent, useRef, DragEvent, useEffect
 import type { ImageFile } from '../App';
 import translations from '../translations';
 import { generateOrEditImage, enhancePrompt } from '../services/geminiService';
-import { PhotoIcon, SparklesIcon, TrashIcon, GripVerticalIcon, DownloadIcon } from './Icons';
+import { PhotoIcon, SparklesIcon, TrashIcon, GripVerticalIcon, DownloadIcon, MaskIcon } from './Icons';
 import Spinner from './Spinner';
 import AnimatedWrapper from './AnimatedWrapper';
+import MaskingEditor from './MaskingEditor';
 
 interface ImageStudioProps {
   t: (typeof translations)['en'];
@@ -56,11 +57,13 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ t }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [originalImage, setOriginalImage] = useState<ImageFile | null>(null);
+  const [maskImage, setMaskImage] = useState<ImageFile | null>(null);
   const [editedImage, setEditedImage] = useState<string | null>(null);
   const [referenceImages, setReferenceImages] = useState<ImageFile[]>([]);
   const [prompt, setPrompt] = useState<string>('');
   const [isEnhancing, setIsEnhancing] = useState<boolean>(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isMaskingEditorOpen, setIsMaskingEditorOpen] = useState(false);
   const dragImage = useRef<number | null>(null);
   const dragOverImage = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -76,7 +79,7 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ t }) => {
     const file = event.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/')) { setError(t.errorInvalidImage); return; }
-      setError(null); setEditedImage(null);
+      setError(null); setEditedImage(null); setMaskImage(null);
       try {
         const base64 = await fileToBase64(file);
         setOriginalImage({ file, base64 });
@@ -136,14 +139,21 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ t }) => {
       setError(errorMessage);
     } finally { setIsEnhancing(false); }
   };
+
+  const handleSaveMask = (maskFile: ImageFile) => {
+    setMaskImage(maskFile);
+    setIsMaskingEditorOpen(false);
+  };
   
   const handleSubmit = async () => {
     if (!prompt.trim()) { setError(t.errorPromptEmpty); return; }
     setIsLoading(true); setError(null); setEditedImage(null);
     try {
       const baseImageData = originalImage ? { base64Data: originalImage.base64.split(',')[1], mimeType: originalImage.file.type } : null;
+      const maskImageData = maskImage ? { base64Data: maskImage.base64.split(',')[1], mimeType: maskImage.file.type } : null;
       const refImagesData = referenceImages.map(ref => ({ base64Data: ref.base64.split(',')[1], mimeType: ref.file.type }));
-      const resultBase64 = await generateOrEditImage(prompt, baseImageData, refImagesData);
+      
+      const resultBase64 = await generateOrEditImage(prompt, baseImageData, refImagesData, maskImageData);
       setEditedImage(`data:image/png;base64,${resultBase64}`);
     } catch (err) {
         const errorMessage = err instanceof Error ? err.message : typeof err === 'string' ? err : t.errorUnexpected;
@@ -162,17 +172,50 @@ const ImageStudio: React.FC<ImageStudioProps> = ({ t }) => {
 
   return (
     <main className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        {isMaskingEditorOpen && originalImage && (
+            <MaskingEditor
+                isOpen={isMaskingEditorOpen}
+                onClose={() => setIsMaskingEditorOpen(false)}
+                imageUrl={originalImage.base64}
+                onSave={handleSaveMask}
+                initialMask={maskImage?.base64 || null}
+                t={t}
+            />
+        )}
         <div className="space-y-6">
             <AnimatedWrapper delay={0}>
                 <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-shadow duration-300">
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">{t.uploadImageOptional}</h3>
                     <input id="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleImageUpload} ref={fileInputRef} />
                     {originalImage ? (
-                        <div className="relative group animate-fade-in-up">
-                            <img src={originalImage.base64} alt="Original" className="w-full rounded-lg object-cover" />
-                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                                <button onClick={() => fileInputRef.current?.click()} className="text-white bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2 rounded-md mx-1">{t.changeImage}</button>
-                                <button onClick={() => {setOriginalImage(null); if(fileInputRef.current) fileInputRef.current.value = '';}} className="text-white bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2 rounded-md mx-1">{t.removeImage}</button>
+                        <div className="space-y-4">
+                            <div className="relative group animate-fade-in-up">
+                                <img src={originalImage.base64} alt="Original" className="w-full rounded-lg object-cover" />
+                                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                                    <button onClick={() => fileInputRef.current?.click()} className="text-white bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2 rounded-md mx-1">{t.changeImage}</button>
+                                    <button onClick={() => {setOriginalImage(null); setMaskImage(null); if(fileInputRef.current) fileInputRef.current.value = '';}} className="text-white bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2 rounded-md mx-1">{t.removeImage}</button>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                {maskImage ? (
+                                    <img src={maskImage.base64} alt="Mask Preview" className="w-12 h-12 rounded-md border bg-gray-800" />
+                                ) : (
+                                    <div className="w-12 h-12 rounded-md border border-dashed flex items-center justify-center bg-white text-gray-400">
+                                        <MaskIcon className="w-6 h-6" />
+                                    </div>
+                                )}
+                                <div className="flex-grow">
+                                  <p className="text-sm font-semibold text-gray-800">{maskImage ? t.maskApplied : t.noMask}</p>
+                                  <p className="text-xs text-gray-500">{maskImage ? t.maskDescription : t.noMaskDescription}</p>
+                                </div>
+                                <button onClick={() => setIsMaskingEditorOpen(true)} className="px-3 py-2 text-sm font-medium rounded-md bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 shadow-sm transition-colors active:scale-95">
+                                    {maskImage ? t.editMask : t.addMask}
+                                </button>
+                                {maskImage && (
+                                    <button onClick={() => setMaskImage(null)} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-100 rounded-full transition-colors" aria-label={t.removeMask}>
+                                        <TrashIcon className="w-5 h-5" />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ) : (
