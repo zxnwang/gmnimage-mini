@@ -13,7 +13,7 @@ export interface ImageFile {
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<'image' | 'video'>('image');
-  const [language, setLanguage] = useState<Language>('id');
+  const [language, setLanguage] = useState<Language>('zh');
 
   const t = translations[language];
 
