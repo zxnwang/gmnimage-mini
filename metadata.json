@@ -1,0 +1,5 @@
+{
+  "name": "gmnimage-minieditor",
+  "description": "An application that allows users to upload an image and edit it using text prompts with the Gemini 2.5 Flash Image model.",
+  "requestFramePermissions": []
+}
